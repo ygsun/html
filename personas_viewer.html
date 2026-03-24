@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Persona 卡片浏览</title>
+  <style>
+    :root {
+      --bg: #f4efe8;
+      --bg-accent: #e8f0f0;
+      --panel: rgba(255, 252, 247, 0.88);
+      --panel-strong: #fffaf3;
+      --text: #243239;
+      --muted: #6d7c83;
+      --line: rgba(36, 50, 57, 0.12);
+      --primary: #2f6f72;
+      --primary-soft: rgba(47, 111, 114, 0.12);
+      --tag: #f0e4d4;
+      --shadow: 0 18px 45px rgba(47, 61, 68, 0.12);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.8), transparent 28%),
+        radial-gradient(circle at top right, rgba(212, 230, 228, 0.7), transparent 26%),
+        linear-gradient(135deg, var(--bg), var(--bg-accent));
+      min-height: 100vh;
+    }
+
+    .page {
+      width: min(1280px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 40px 0 56px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(255, 250, 243, 0.92), rgba(255, 255, 255, 0.7));
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      backdrop-filter: blur(12px);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-family: "Avenir Next", "Segoe UI", "PingFang SC", sans-serif;
+      font-size: clamp(32px, 5vw, 52px);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr auto;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 54px;
+      padding: 0 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .field label {
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .meta strong {
+      color: var(--text);
+    }
+
+    .helper {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.56);
+      border: 1px dashed rgba(47, 111, 114, 0.25);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .card-head {
+      padding: 22px 22px 16px;
+      background:
+        linear-gradient(180deg, rgba(47, 111, 114, 0.1), transparent),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 250, 243, 0.95));
+      border-bottom: 1px solid rgba(36, 50, 57, 0.08);
+    }
+
+    .card-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 10px;
+    }
+
+    .nickname {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .identity {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .subline {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .card-body {
+      padding: 18px 22px 22px;
+    }
+
+    .row {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(36, 50, 57, 0.08);
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .label {
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .value {
+      font-size: 15px;
+      line-height: 1.8;
+      word-break: break-word;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--tag);
+      color: #684f30;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .empty {
+      margin-top: 24px;
+      padding: 26px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 860px) {
+      .page {
+        width: min(100vw - 20px, 1280px);
+        padding-top: 22px;
+      }
+
+      .hero {
+        padding: 20px;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">Persona Viewer</span>
+      <h1>人设卡片浏览</h1>
+      <p>页面默认会尝试读取项目里的 <code>data/personas.jsonl</code>，并把每条记录中的 <code>profile</code> 结构渲染为中文字段卡片。如果浏览器阻止本地文件读取，也可以手动选择同一个 JSONL 文件。</p>
+
+      <div class="toolbar">
+        <div class="field">
+          <label for="keyword">搜索</label>
+          <input id="keyword" type="text" placeholder="昵称、身份、城市、学校、描述关键词" />
+        </div>
+        <div class="field">
+          <label for="identityFilter">身份</label>
+          <select id="identityFilter">
+            <option value="">全部</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fileInput">文件</label>
+          <input id="fileInput" type="file" accept=".jsonl,.txt,.json" />
+        </div>
+      </div>
+
+      <div class="meta">
+        <span>当前状态：<strong id="statusText">正在加载数据...</strong></span>
+        <span>总记录：<strong id="totalCount">0</strong></span>
+        <span>筛选后：<strong id="visibleCount">0</strong></span>
+      </div>
+
+      <div class="helper">
+        推荐方式：在项目根目录启动一个静态服务后访问这个页面，例如运行 <code>python -m http.server 8000</code>，然后打开 <code>http://localhost:8000/docs/personas_viewer.html</code>。
+      </div>
+    </section>
+
+    <section id="cards" class="cards"></section>
+    <section id="emptyState" class="empty" hidden>当前没有可展示的数据。</section>
+  </main>
+
+  <script>
+    const fieldMap = [
+      ["external_id", "账号 ID"],
+      ["nickname", "昵称"],
+      ["gender", "性别"],
+      ["birth_year", "出生年份"],
+      ["identity", "身份"],
+      ["current_location", "当前所在地"],
+      ["target_location", "目标地点"],
+      ["current_grade", "当前阶段"],
+      ["current_school", "当前学校"],
+      ["personality_traits", "性格特征"],
+      ["language_style", "语言风格"],
+      ["description", "人设描述"],
+      ["community_activity", "社区活跃度"]
+    ];
+
+    const cardsEl = document.getElementById("cards");
+    const emptyStateEl = document.getElementById("emptyState");
+    const totalCountEl = document.getElementById("totalCount");
+    const visibleCountEl = document.getElementById("visibleCount");
+    const statusTextEl = document.getElementById("statusText");
+    const keywordEl = document.getElementById("keyword");
+    const identityFilterEl = document.getElementById("identityFilter");
+    const fileInputEl = document.getElementById("fileInput");
+
+    let allRecords = [];
+
+    function setStatus(message) {
+      statusTextEl.textContent = message;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function parseJsonl(text) {
+      return text
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => JSON.parse(line));
+    }
+
+    function renderTags(items) {
+      if (!Array.isArray(items) || items.length === 0) {
+        return '<div class="value">暂无</div>';
+      }
+      return `<div class="tags">${items.map(item => `<span class="tag">${escapeHtml(item)}</span>`).join("")}</div>`;
+    }
+
+    function renderValue(key, value) {
+      if (Array.isArray(value)) {
+        return renderTags(value);
+      }
+      if (value === "" || value === null || value === undefined) {
+        return '<div class="value">暂无</div>';
+      }
+      if (key === "community_activity") {
+        return `<div class="value">${escapeHtml(value)} / 100</div>`;
+      }
+      return `<div class="value">${escapeHtml(value)}</div>`;
+    }
+
+    function buildCard(record) {
+      const profile = record.profile || {};
+      const subtitle = [
+        profile.gender || "未说明",
+        profile.current_grade || "未说明",
+        profile.current_location || "未说明",
+        profile.target_location || "目标未说明"
+      ].join(" · ");
+
+      const rows = fieldMap
+        .map(([key, label]) => {
+          return `
+            <div class="row">
+              <div class="label">${escapeHtml(label)}</div>
+              ${renderValue(key, profile[key])}
+            </div>
+          `;
+        })
+        .join("");
+
+      return `
+        <article class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="nickname">${escapeHtml(profile.nickname || "未命名")}</div>
+              <span class="identity">${escapeHtml(profile.identity || "未说明")}</span>
+            </div>
+            <div class="subline">${escapeHtml(subtitle)}</div>
+            <div class="subline">批次：${escapeHtml(record.batch_id || "未说明")}</div>
+          </div>
+          <div class="card-body">
+            ${rows}
+          </div>
+        </article>
+      `;
+    }
+
+    function matchesRecord(record, keyword, identity) {
+      const profile = record.profile || {};
+      const haystack = [
+        profile.external_id,
+        profile.nickname,
+        profile.gender,
+        profile.identity,
+        profile.current_location,
+        profile.target_location,
+        profile.current_grade,
+        profile.current_school,
+        profile.description,
+        ...(profile.personality_traits || []),
+        ...(profile.language_style || [])
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (identity && profile.identity !== identity) {
+        return false;
+      }
+
+      if (keyword && !haystack.includes(keyword)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function refreshIdentityOptions(records) {
+      const identities = Array.from(new Set(records.map(item => item.profile?.identity).filter(Boolean)));
+      const current = identityFilterEl.value;
+      identityFilterEl.innerHTML = '<option value="">全部</option>' + identities.map(identity => {
+        return `<option value="${escapeHtml(identity)}">${escapeHtml(identity)}</option>`;
+      }).join("");
+      identityFilterEl.value = identities.includes(current) ? current : "";
+    }
+
+    function renderCards() {
+      const keyword = keywordEl.value.trim().toLowerCase();
+      const identity = identityFilterEl.value;
+      const filtered = allRecords.filter(record => matchesRecord(record, keyword, identity));
+
+      totalCountEl.textContent = String(allRecords.length);
+      visibleCountEl.textContent = String(filtered.length);
+
+      if (filtered.length === 0) {
+        cardsEl.innerHTML = "";
+        emptyStateEl.hidden = false;
+        return;
+      }
+
+      emptyStateEl.hidden = true;
+      cardsEl.innerHTML = filtered.map(buildCard).join("");
+    }
+
+    async function loadDefaultFile() {
+      try {
+        const response = await fetch("personas.jsonl", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const text = await response.text();
+        allRecords = parseJsonl(text);
+        refreshIdentityOptions(allRecords);
+        renderCards();
+        setStatus("已从 data/personas.jsonl 加载");
+      } catch (error) {
+        allRecords = [];
+        refreshIdentityOptions(allRecords);
+        renderCards();
+        setStatus("默认读取失败，请手动选择 personas.jsonl");
+        console.warn("读取默认数据失败：", error);
+      }
+    }
+
+    keywordEl.addEventListener("input", renderCards);
+    identityFilterEl.addEventListener("change", renderCards);
+
+    fileInputEl.addEventListener("change", async event => {
+      const [file] = event.target.files || [];
+      if (!file) {
+        return;
+      }
+      try {
+        const text = await file.text();
+        allRecords = parseJsonl(text);
+        refreshIdentityOptions(allRecords);
+        renderCards();
+        setStatus(`已手动载入 ${file.name}`);
+      } catch (error) {
+        setStatus("文件解析失败，请确认是合法 JSONL");
+        console.error("解析文件失败：", error);
+      }
+    });
+
+    loadDefaultFile();
+  </script>
+</body>
+</html>
