@@ -296,10 +296,6 @@
         <span>总记录：<strong id="totalCount">0</strong></span>
         <span>筛选后：<strong id="visibleCount">0</strong></span>
       </div>
-
-      <div class="helper">
-        推荐方式：在项目根目录启动一个静态服务后访问这个页面，例如运行 <code>python -m http.server 8000</code>，然后打开 <code>http://localhost:8000/docs/personas_viewer.html</code>。
-      </div>
     </section>
 
     <section id="cards" class="cards"></section>
@@ -479,7 +475,7 @@
         allRecords = parseJsonl(text);
         refreshIdentityOptions(allRecords);
         renderCards();
-        setStatus("已从 data/personas.jsonl 加载");
+        setStatus("已从 personas.jsonl 加载");
       } catch (error) {
         allRecords = [];
         refreshIdentityOptions(allRecords);
